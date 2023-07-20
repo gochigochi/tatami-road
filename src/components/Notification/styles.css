@@ -1,0 +1,14 @@
+.cta-container {
+}
+
+.cta {
+    padding: .5rem 1.5rem;
+    min-width: 4rem;
+    background-color: #ffffff;
+    border-radius: 500px;
+    display: grid;
+    place-items: center;
+    /* position: relative; */
+    transform: translateX(-50%);
+    /* writing-mode: horizontal-tb; */
+}
