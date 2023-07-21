@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react'
 import { useGLTF, useAnimations } from '@react-three/drei'
 
-export default function Model(props) {
+const Model = (props) => {
 
     useGLTF.preload('./models/animated_model_test_2.glb')
     const model = useGLTF('./models/animated_model_test_2.glb')
@@ -46,3 +46,8 @@ export default function Model(props) {
 
     return <primitive object={model.scene} />
 }
+
+
+//CHECK IF I HAVE TO PASS DEPENDENCIES TO MEMO AS TO
+//SEE IF IT NEEDS RERENDER ON SOME STATE CHANGE!!!
+export default React.memo(Model)

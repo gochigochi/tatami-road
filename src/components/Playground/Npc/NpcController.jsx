@@ -20,50 +20,22 @@ const NpcController = ({
     const [interacting, setInteracting] = useState(false)
     const rigidBody = useRef()
     const npcRef = useRef()
-    const { gameState, updateGameState } = useGameState(state => ({ gameState: state.gameState, updateGameState: state.updateGameState}))
-
-    console.log('///////////////////////////////////////')
-    console.log('Interaction in controller', interacting)
+    const { gameState, updateGameState } = useGameState(state => ({ gameState: state.gameState, updateGameState: state.updateGameState }))
 
     useEffect(() => {
 
-        console.log(gameState)
-        
         if (gameState === "NPC_CONVERSATION" && intersecting) {
-
-            console.log('Interacting....')
-
+            console.log(`animate NPC ID: ${id}`)
             setInteracting(true)
-            //Search if this npc is in store and get the current node
-            //Else set it as new npc and set current node to 1
-
-            //In conversation update locally here the textNode but keeping the initial one
-            //Update the current node in the store once the conversation is satisfactory, else
-            //it will return automatically to the initial node (i.e. if conversation fails, the
-            //next time the player talks to the npc it will have the same chat secuence)
-        } else {
-            setInteracting(false)
         }
 
-        console.log('effect ended')
+        //SHOW NAME TAG IF NOT TALKING TO NPC
+        if (gameState === "PLAY") setInteracting(false)
+
     }, [gameState])
 
-    // useEffect(() => { 
-
-    //     console.log('this')
-
-    //     if (!interacting) updateGameState("PLAY") 
-    // }, [interacting])
-
     const handleIntersectionEnter = (payload) => {
-
-        // const { manifold, target, other } = payload
-
         setIntersecting(true)
-        //OTHER IS THIS OBJECT
-        //TARGET IS THE PLAYER
-        // console.log(other)
-        // console.log(target)
     }
 
     const handleIntersectionExit = (payload) => {
@@ -77,7 +49,7 @@ const NpcController = ({
             position={position}
             rotation={rotation}
             // type={type}
-            data={scripts}
+            data={{ npcId: id, npcScripts: scripts }}
             colliders={false}
         >
             <CapsuleCollider args={[.3, .3]} />
@@ -94,7 +66,7 @@ const NpcController = ({
                     /> :
                     null
             }
-            {
+            {/* {
                 interacting && gameState === "NPC_CONVERSATION" ?
                     <Chat
                         npcId={id}
@@ -103,7 +75,7 @@ const NpcController = ({
                         setInteracting={setInteracting}
                     /> :
                     null
-            }
+            } */}
             <group ref={npcRef} position={[0, -.6, 0]}>
                 <Npc model={model} interacting={interacting} />
             </group>

@@ -54,10 +54,11 @@ const Playground = () => {
             rotation: [0, -Math.PI / 4, 0],
             model: "./models/npc.glb",
             type: "kinematicPosition",
+            localCheckpointIndex: 0,
             scripts: [
                 {
                     checkpoint: 0, //MANEJAR ESTOS DE MANERA GLOBAL
-                    texts: [
+                    checkpointScripts: [
                         {
                             node: 0,
                             text: "おはよう。。。",
@@ -78,13 +79,17 @@ const Playground = () => {
                             question: false,
                             answ: null,
                             nextNode: null,
-                        },
+                            isCorrect: 1, //SET CHECKPOINT TO NEXT NODE***
+                            isIncorrect: 0, // or just do nothing
+                        }, 
+                        //*** FOR EXAMPLE, IF THIS LAST IS AN EXERCISE, IF SUCCEDED THEN UPDATE LOCALCHECKPOINTINDEX TO 1
+                        //SO NEXT TIME IT STARTS FROM NEXT SCRIPT. BUT DO AS WELL A GLOBAL INDEX.
                     ],
                 },
                 {
 
                     checkpoint: 1,
-                    texts: [
+                    checkpointScripts: [
                         {
                             node: 0,
                             text: "はい、そうです。",
@@ -120,7 +125,7 @@ const Playground = () => {
             scripts: [
                 {
                     checkpoint: 0,
-                    texts: [
+                    checkpointScripts: [
                         {
                             node: 0,
                             text: "ううん。。。",

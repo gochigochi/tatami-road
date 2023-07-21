@@ -1,9 +1,9 @@
 import { create } from 'zustand'
 
 export const useGameProgress = create((set, get) => ({
-    checkpoint: 0,
+    globalCheckpoint: 0, //THIS IS THE GLOBAL CHECKPOINT
     characterPosition: [0, 0, 0],
-    npcsScriptsIndex: [
+    npcsLocalCheckpointIndex: [
         // {id: 1, currentNode: 1}, THIS IS THE STRUCTURE - IS DYNAMIC CREATION
     ],
     createNpcInStore: (npcId) => {
@@ -11,7 +11,7 @@ export const useGameProgress = create((set, get) => ({
         // const npcsCurrentNodesCopy = get().npcsCurrentNodes
         // set()
 
-        set(state => ({ ...state, npcsScriptsIndex: [...state.npcsScriptsIndex, { id: npcId, index: 0}]}))
+        set(state => ({ ...state, npcsLocalCheckpointIndex: [...state.npcsLocalCheckpointIndex, { id: npcId, index: 0}]}))
 
     },
     updateNpcScriptIndex: (npcId, newNode) => {
