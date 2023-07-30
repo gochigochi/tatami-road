@@ -2,7 +2,7 @@ import React, { useRef } from 'react'
 import { useGLTF } from '@react-three/drei'
 import { RigidBody } from '@react-three/rapier'
 
-export default function Map(props) {
+export default function Playground(props) {
     useGLTF.preload('./maps/test.glb')
     const { nodes, materials } = useGLTF('./maps/test.glb')
     return (

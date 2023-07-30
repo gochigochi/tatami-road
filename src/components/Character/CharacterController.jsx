@@ -1,8 +1,8 @@
 import { useRef, useState, useEffect } from 'react'
 import { useFrame } from "@react-three/fiber"
 import { RigidBody, CapsuleCollider, CuboidCollider } from "@react-three/rapier"
-import { useInput } from "../../../hooks/useInput"
-import { useGameState } from "../../../store/gameState"
+import { useInput } from '../../hooks/useInput'
+import { useGameState } from '../../store/gameState'
 import { handleCharacterMovement } from './handleCharacterMovement'
 import { handleCamera } from './handleCamera'
 import Character from "./Character"
@@ -12,17 +12,15 @@ import Chat from "../Chat/Chat"
 const CharacterController = () => {
 
     const { gameState, updateGameState } = useGameState(state => ({ gameState: state.gameState, updateGameState: state.updateGameState }))
-    const { input, setInput } = useInput()
+    const { input } = useInput()
     const rigidBody = useRef()
     const character = useRef()
     const rotation = useRef(0)
     const intersectingNpc = useRef(false)
     const [npcData, setNpcData] = useState()
-    const [interactingWidthNpc, setInteractingWithNpc] = useState({})
-    const [npcScript, setNpcScript] = useState()
     const intersectingObject = useRef(false)
     const intersectingPort = useRef(false)
-    
+
     useFrame((state, delta) => {
 
         handleCamera(state, character)
@@ -33,22 +31,10 @@ const CharacterController = () => {
 
     })
 
-    console.log(npcData)
-
     useEffect(() => {
 
-        if (
-            input.interact &&
-            intersectingNpc.current.intersecting &&
-            gameState !== "NPC_CONVERSATION"
-        ) {
-            // SET ALL THE DATA FROM THE NPC INTERSECTING WITH
-            // AND SET THE INTERACTION TO TRUE AS TO RENDER CHAT
-            // setInteractingWithNpc({
-            //     bool: true,
-            //     ...intersectingNpc.current
-            // })
-
+        if (input.interact && intersectingNpc.current.intersecting && gameState !== "NPC_CONVERSATION") {
+            console.log('here')
             updateGameState("NPC_CONVERSATION")
             setNpcData({
                 position: intersectingNpc.current.npcPosition,

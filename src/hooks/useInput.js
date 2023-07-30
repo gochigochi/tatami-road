@@ -19,7 +19,7 @@ export const useInput = () => {
         ArrowDown: "backward",
         ArrowLeft: "left",
         ArrowRight: "right",
-        Space: "interact",
+        Enter: "interact",
         KeyM: "openMenu",
     }
 
