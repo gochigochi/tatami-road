@@ -8,11 +8,10 @@ import { handleCamera } from './handleCamera'
 import Character from "./Character"
 import Chat from "../Chat/Chat"
 
-
 const CharacterController = () => {
 
     const { gameState, updateGameState } = useGameState(state => ({ gameState: state.gameState, updateGameState: state.updateGameState }))
-    const { input } = useInput()
+    const { input, interactionInput } = useInput()
     const rigidBody = useRef()
     const character = useRef()
     const rotation = useRef(0)
@@ -29,12 +28,8 @@ const CharacterController = () => {
             handleCharacterMovement(input, rigidBody, rotation, character)
         }
 
-    })
-
-    useEffect(() => {
-
-        if (input.interact && intersectingNpc.current.intersecting && gameState !== "NPC_CONVERSATION") {
-            console.log('here')
+        if (interactionInput.current.interact && intersectingNpc.current.intersecting && gameState !== "NPC_CONVERSATION") {
+            // ZOOM IN AND ZOOM OUT AFTER CONVERSATION OR INTERACTIONS
             updateGameState("NPC_CONVERSATION")
             setNpcData({
                 position: intersectingNpc.current.npcPosition,
@@ -42,9 +37,10 @@ const CharacterController = () => {
             })
         }
 
-    }, [input.interact])
+        //PREVENT PLAYER HOLDS THE INTERACTION BUTTON
+        if (interactionInput.current.interact) setTimeout(() => interactionInput.current.interact = false, 100)
 
-    // console.log('char controller')
+    })
 
     const handleIntersectionEnter = (payload) => {
 
@@ -87,7 +83,7 @@ const CharacterController = () => {
             </group>
             {
                 gameState === "NPC_CONVERSATION" && npcData ?
-                    <Chat npcData={npcData} setNpcData={setNpcData} /> : null
+                    <Chat npcData={npcData} setNpcData={setNpcData} intersectingNpc={intersectingNpc} /> : null
             }
         </RigidBody>
     )

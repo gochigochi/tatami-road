@@ -7,7 +7,6 @@ import Notification from '../Notification/Notification'
 const NpcController = ({
     position = [0, 0, 0],
     rotation = [0, 0, 0],
-    restitution = 1.7,
     type = "kinematicPosition",
     model = "",
     name = "ある　ひと",
@@ -24,7 +23,7 @@ const NpcController = ({
     useEffect(() => {
 
         if (gameState === "NPC_CONVERSATION" && intersecting) {
-            console.log(`animate NPC ID: ${id}`)
+            // console.log(`animate NPC ID: ${id}`)
             setInteracting(true)
         }
 
@@ -65,16 +64,6 @@ const NpcController = ({
                     /> :
                     null
             }
-            {/* {
-                interacting && gameState === "NPC_CONVERSATION" ?
-                    <Chat
-                        npcId={id}
-                        scripts={scripts}
-                        npcRef={npcRef}
-                        setInteracting={setInteracting}
-                    /> :
-                    null
-            } */}
             <group ref={npcRef} position={[0, -.6, 0]}>
                 <Npc model={model} interacting={interacting} />
             </group>

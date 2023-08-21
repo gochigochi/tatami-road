@@ -42,7 +42,7 @@ const Model = (props) => {
             currentAction.current = newAction
         }
 
-    }, [input])
+    }, [input, props.gameState])
 
     return <primitive object={model.scene} />
 }

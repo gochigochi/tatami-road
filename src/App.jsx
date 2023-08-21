@@ -13,7 +13,7 @@ function App() {
 
   return (
     <>
-      <button id="debug-btn" onClick={(() => setDebugMode(!debugMode))}>Debug</button>
+      {/* <button id="debug-btn" onClick={(() => setDebugMode(!debugMode))}>Debug</button> */}
       <Canvas id="three-canvas" shadows camera={{ position: [0, 6, 14], fov: 42 }}>
 
         {/* <gridHelper position-y={[-.3]} /> */}

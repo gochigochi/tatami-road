@@ -13,4 +13,5 @@ export const useGameState = create((set, get) =>({
     PLAY
     NPC_CONVERSATION
     OBJECT_INTERACTION
+    TRANSITION (to wait between one state and other)
 */

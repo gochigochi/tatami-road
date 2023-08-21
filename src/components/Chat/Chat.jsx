@@ -1,126 +1,106 @@
-import { useEffect, useState, useRef } from "react"
+import React, { useEffect, useState, useRef } from "react"
 import { Html } from "@react-three/drei"
 import { useInput } from "../../hooks/useInput"
 import { useGameProgress } from "../../store/gameProgress"
 import { useGameState } from "../../store/gameState"
 import "./styles.css"
+import { useFrame } from "@react-three/fiber"
 
 const Chat = ({ npcData, setNpcData }) => {
 
-    const updateGameState = useGameState(state => state.updateGameState)
-    const { globalCheckpoint, npcsLocalCheckpointIndex, createNpcInStore } = useGameProgress(state => ({ globalCheckpoint: state.globalCheckpoint, npcsLocalCheckpointIndex: state.npcsLocalCheckpointIndex, createNpcInStore: state.createNpcInStore }))
+    const { gameState, updateGameState } = useGameState(state => ({ gameState: state.gameState, updateGameState: state.updateGameState }))
+    const { gameCheckpoint, updateGameCheckpoint } = useGameProgress(state => ({ gameCheckpoint: state.gameCheckpoint, updateGameCheckpoint: state.updateGameCheckpoint}))
     const [scripts, setScripts] = useState()
-    const { input } = useInput()
+    const [hideBubbles, setHideBubbles] = useState(false)
+    const { interactionInput } = useInput()
     const [playerInputBox, setPlayerInputBox] = useState(false)
     const playerInput = useRef("")
     const playerInputRef = useRef()
-    const isInputInteract = useRef(false)
+    const interacted = useRef(false)
 
-    // SET FIRST MESSAGE
+    // SET SCRIPTS AND FIRST MESSAGE
     useEffect(() => {
 
-        // Get this NPCs data from the store
-        const npcLocalCheckpointIndex = npcsLocalCheckpointIndex.find(npc => npc.id === npcData.content.npcId)
-        let currentScripts
-        let currentScript
-
-        // Check if the npc is already in the store, else create it with local checkpoint to 0
-        if (!npcLocalCheckpointIndex) {
-
-            // console.log('NPC doesn-t exist in store. Create it')
-            createNpcInStore(npcData.content.npcId)
-
-            // Get scripts according to globalCheckpoint
-            currentScripts = npcData.content.npcScripts.find(scripts => scripts.checkpoint === globalCheckpoint)
-
-            // From all the scripts (array of objects), find current first script using local checkpointIndex
-            currentScript = currentScripts.checkpointScripts.find(scripts => scripts.node === 0)
-
-
-        } else {
-
-            // Grab scripts according to globalCheckpoint
-            currentScripts = npcData.content.npcScripts.find(scripts => scripts.checkpoint === globalCheckpoint)
-            
-            currentScript = currentScripts.checkpointScripts.find(scripts => scripts.node === 0)
-
-        }
+        //GET SCRIPTS ACCORDING TO CHECKPOINT
+        const currentScripts = npcData.content.npcScripts.findLast(scripts => scripts.checkpoint <= gameCheckpoint)
+        const currentScript = currentScripts.checkpointScripts.find(scripts => scripts.node === 0)
 
         setScripts({
             currentScripts: currentScripts,
             currentScript: currentScript,
         })
 
-
     }, [])
 
+    useFrame(() => {
 
-    // HANDLES THE DIALOGUE FLOW
-    useEffect(() => {
+        // WHEN CHAT INTERACTION
+        if (interactionInput.current.interact && gameState === "NPC_CONVERSATION") {
 
-        // Always check if it is true to prevent fireing on keyup
-        // CHECK IF INTERACTION COMES FROM INPUT OR OTHER EXCERSICE.
-        // IF INPUT OR OTHER EXCERCISE HANDLE THE NEXT INPUT CALCULATION IN THE HANDLERS.
-        // THE ACTIONS AS TO END CONVERSATION OR OPEN THE INPUT BOX, ETC IS HANDLED IN THE USEFFECT FOR THE SCRIPTS CHANGES
-        if (input.interact && !playerInputBox && !isInputInteract.current) {
+            if (!interacted.current) {
+
+                interacted.current = true
+
+                if (
+                    scripts.currentScript?.nextNode &&
+                    !scripts.currentScript?.requiresInput &&
+                    !scripts.currentScript?.isEnd
+                ) {
+                    //SET NEXT SCRIPT (A)
+                    const nextScript = scripts.currentScripts.checkpointScripts.find(script => script.node === scripts.currentScript.nextNode)
+                    setScripts({ ...scripts, currentScript: nextScript })
+                }
 
 
-            if (scripts.currentScript?.nextNode && !scripts.currentScript?.requiresInput) {
-                const nextScript = scripts.currentScripts.checkpointScripts.find(script => script.node === scripts.currentScript.nextNode)
-                setScripts({ ...scripts, currentScript: nextScript })
+                if (scripts.currentScript?.requiresInput && !playerInputBox) {
+                    setPlayerInputBox(true)
+                }
+
+                //EVALUATE WRITTEN ANSWER. CONDITIONS MEANS IS HANDLING PLAYER INPUT
+                if (playerInputBox) {
+                    console.log(playerInput.current)
+
+                    if (playerInput.current === scripts.currentScript.correctAnsw) {
+                        //SET NEXT SCRIPT (A)
+                        const nextScript = scripts.currentScripts.checkpointScripts.find(script => script.node === scripts.currentScript.nextNode)
+                        setScripts({ ...scripts, currentScript: nextScript })
+                    } else {
+
+                        console.log("error")
+                        const nextScript = scripts.currentScripts.checkpointScripts.find(script => script.node === "error")
+                        setScripts({ ...scripts, currentScript: nextScript })
+                    }
+
+                    setPlayerInputBox(false)
+                }
+
+                //FINISH CONVERSATION AFTER ERROR OR NATURAL ENDING
+                if (scripts.currentScript.node === "error" || scripts.currentScript?.isEnd) {
+                    setHideBubbles(true)
+                    setTimeout(() => {
+                        updateGameState("PLAY")
+                        interactionInput.current.interact = false
+                    }, 500)
+
+                    if (scripts.currentScript?.nextCheckpoint) {
+                        // UPDATE LOCAL CHEKPOINT ON STORE IF HAS ANY
+                        updateGameCheckpoint(scripts.currentScript.nextCheckpoint)
+                    }
+
+                    setNpcData()
+
+                }
             }
-
-            if (!scripts.currentScript?.nextNode) {
-                const nextScript = scripts.currentScripts.checkpointScripts.find(script => script.node === scripts.currentScript.nextNode)
-                setScripts({ ...scripts, currentScript: nextScript })
-            }
-
-        }
-            
-        if (isInputInteract.current) isInputInteract.current = false
-
-    }, [input.interact])
-
-    // HANDLES DIALOGUE FLOW WHEN:
-    // THERE IS AN INPUT OR OTHER EXERCISE
-    // WHEN CONVERSATION HAS TO FINISH
-    useEffect(() => {
-
-        if (scripts?.currentScript.requiresInput) {
-            setPlayerInputBox(true)
         }
 
-        if (scripts?.currentScript.node === -2) {
-            updateGameState("PLAY")
-            setNpcData(undefined)
-        }
+        // WHEN INTERACTION RELEASED
+        if (!interactionInput.current.interact) interacted.current = false
 
-    }, [scripts?.currentScript])
-
-    const handleSubmit = (e) => {
-        e.preventDefault()
-        isInputInteract.current = true
-
-        // IF ANSWER IS CORRECT
-        if (playerInput.current === scripts.currentScript.correctAnsw) {
-
-            if (scripts.currentScript.nextNode) {
-                const nextScript = scripts.currentScripts.checkpointScripts.find(script => script.node === scripts.currentScript.nextNode)
-                setScripts({ ...scripts, currentScript: nextScript })
-            }
-
-        } else {
-
-            //ELSE SET ERROR MESSAGE
-            const nextScript = scripts.currentScripts.checkpointScripts.find(script => script.node === -1)
-            setScripts({ ...scripts, currentScript: nextScript })
-
-        }
-
-        setPlayerInputBox(false)
-    }
+    })
 
     const handleTextInput = (e) => playerInput.current = e.target.value
+
+    if (hideBubbles) return <></>
 
     return (
         <Html as="div" position={[0, 1, 0]}>
@@ -131,15 +111,12 @@ const Chat = ({ npcData, setNpcData }) => {
             }
             {
                 playerInputBox ?
-                    <form onSubmit={handleSubmit}>
-                        <input
-                            onChange={handleTextInput}
-                            ref={playerInputRef}
-                            type="text"
-                            autoFocus
-                        />
-                        <button type="submit" />
-                    </form>
+                    <input
+                        onChange={handleTextInput}
+                        ref={playerInputRef}
+                        type="text"
+                        autoFocus
+                    />
                     :
                     null
             }
@@ -147,4 +124,5 @@ const Chat = ({ npcData, setNpcData }) => {
     )
 }
 
-export default Chat
+// export default Chat
+export default React.memo(Chat)

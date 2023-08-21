@@ -6,20 +6,22 @@ export const useInput = () => {
         backward: false,
         left: false,
         right: false,
-        interact: false,
         cancel: false,
         openMenu: false,
         openKanjiBook: false,
         openGrammarBook: false,
         openInventary: false,
     })
-    
+
+    const interactionInput = useRef({
+        interact: false,
+    })
+
     const keys = {
         ArrowUp: "forward",
         ArrowDown: "backward",
         ArrowLeft: "left",
         ArrowRight: "right",
-        Enter: "interact",
         KeyM: "openMenu",
     }
 
@@ -30,20 +32,42 @@ export const useInput = () => {
         const handleKeyDown = (e) => {
 
             // Prevent setting the input to true while the key is down, but only the first time
-            if(e.repeat) return
+            if (e.repeat) return
 
-            setInput((inputState) => ({...inputState, [findKey(e.code)]: true}))
+            if (
+                e.code === "ArrowUp" ||
+                e.code === "ArrowDown" ||
+                e.code === "ArrowLeft" ||
+                e.code === "ArrowRight" ||
+                e.code === "KeyM"
+            ) {
+
+                setInput((inputState) => ({ ...inputState, [findKey(e.code)]: true }))
+            } 
+
+            if (e.code === "Enter") {
+                interactionInput.current.interact = true
+            }
+
         }
 
         const handleKeyUp = (e) => {
 
-            if (e.code === "ArrowUp" || e.code === "ArrowDown" || e.code === "ArrowLeft" || e.code === "ArrowRight") {
+            if (
+                e.code === "ArrowUp" ||
+                e.code === "ArrowDown" ||
+                e.code === "ArrowLeft" ||
+                e.code === "ArrowRight" ||
+                e.code === "KeyM"
+            ) {
 
-            } else {
+                setInput((inputState) => ({ ...inputState, [findKey(e.code)]: false }))
+            } 
 
+            if (e.code === "Enter") {
+                interactionInput.current.interact = false
             }
 
-            setInput((inputState) => ({...inputState, [findKey(e.code)]: false}))
         }
 
         document.addEventListener("keydown", handleKeyDown)
@@ -56,6 +80,5 @@ export const useInput = () => {
 
     }, [])
 
-
-    return { input, setInput }
+    return { input, setInput, interactionInput }
 }
