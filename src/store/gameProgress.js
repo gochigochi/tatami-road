@@ -5,7 +5,7 @@ export const useGameProgress = create((set, get) => ({
     characterCurrentPosition: [0, 0, 0],
     currentMap: null,
     lastMap: null,
-    gameCheckpoint: 0,
+    gameCheckpoint: 1,
     npcsLocalCheckpoint: [
         // {id: 1, currentCheckpoint: 1}, THIS IS THE STRUCTURE - IS DYNAMIC CREATION
     ],

@@ -9,14 +9,17 @@ import { useFrame } from "@react-three/fiber"
 const Chat = ({ npcData, setNpcData }) => {
 
     const { gameState, updateGameState } = useGameState(state => ({ gameState: state.gameState, updateGameState: state.updateGameState }))
-    const { gameCheckpoint, updateGameCheckpoint } = useGameProgress(state => ({ gameCheckpoint: state.gameCheckpoint, updateGameCheckpoint: state.updateGameCheckpoint}))
+    const { gameCheckpoint, updateGameCheckpoint } = useGameProgress(state => ({ gameCheckpoint: state.gameCheckpoint, updateGameCheckpoint: state.updateGameCheckpoint }))
     const [scripts, setScripts] = useState()
     const [hideBubbles, setHideBubbles] = useState(false)
     const { interactionInput } = useInput()
     const [playerInputBox, setPlayerInputBox] = useState(false)
+    const [playerDragBox, setPlayerDragBox] = useState(false)
+    const [draggables, setDraggables] = useState([])
+    const interacted = useRef(false)
     const playerInput = useRef("")
     const playerInputRef = useRef()
-    const interacted = useRef(false)
+    const draggablesBoxRef = useRef()
 
     // SET SCRIPTS AND FIRST MESSAGE
     useEffect(() => {
@@ -44,6 +47,7 @@ const Chat = ({ npcData, setNpcData }) => {
                 if (
                     scripts.currentScript?.nextNode &&
                     !scripts.currentScript?.requiresInput &&
+                    !scripts.currentScript?.requiresDrag &&
                     !scripts.currentScript?.isEnd
                 ) {
                     //SET NEXT SCRIPT (A)
@@ -56,9 +60,15 @@ const Chat = ({ npcData, setNpcData }) => {
                     setPlayerInputBox(true)
                 }
 
+                if (scripts.currentScript?.requiresDrag && !playerDragBox) {
+                    setPlayerDragBox(true)
+                    setDraggables(scripts.currentScript?.draggables)
+                    
+                }
+
                 //EVALUATE WRITTEN ANSWER. CONDITIONS MEANS IS HANDLING PLAYER INPUT
                 if (playerInputBox) {
-                    console.log(playerInput.current)
+                    // console.log(playerInput.current)
 
                     if (playerInput.current === scripts.currentScript.correctAnsw) {
                         //SET NEXT SCRIPT (A)
@@ -72,6 +82,10 @@ const Chat = ({ npcData, setNpcData }) => {
                     }
 
                     setPlayerInputBox(false)
+                }
+
+                if (playerDragBox) {
+                    console.log("DRAG")
                 }
 
                 //FINISH CONVERSATION AFTER ERROR OR NATURAL ENDING
@@ -103,10 +117,10 @@ const Chat = ({ npcData, setNpcData }) => {
     if (hideBubbles) return <></>
 
     return (
-        <Html as="div" position={[0, 1, 0]}>
+        <Html as="div" wrapperClass="bubbles-container" position={[0, 1, 0]}>
             {
                 scripts ?
-                    <p className="bubble">{scripts.currentScript.text}</p> :
+                    <p class="bubble" dangerouslySetInnerHTML={{ __html: scripts.currentScript.text }} /> :
                     null
             }
             {
@@ -116,9 +130,24 @@ const Chat = ({ npcData, setNpcData }) => {
                         ref={playerInputRef}
                         type="text"
                         autoFocus
-                    />
-                    :
-                    null
+                    /> : null
+            }
+            {
+                playerDragBox ?
+                    <div class="draggablesBox" ref={draggablesBoxRef} onClick={() => console.log(draggablesBoxRef.current)}>
+                        {
+                            draggables.map(draggable => {
+                                return(
+                                    <div 
+                                    key={draggable} 
+                                    class="draggable"
+                                    >
+                                        {draggable}
+                                    </div>
+                                )
+                            })
+                        }
+                    </div> : null
             }
         </Html>
     )
