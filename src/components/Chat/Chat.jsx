@@ -13,13 +13,15 @@ const Chat = ({ npcData, setNpcData }) => {
     const [scripts, setScripts] = useState()
     const [hideBubbles, setHideBubbles] = useState(false)
     const { interactionInput } = useInput()
-    const [playerInputBox, setPlayerInputBox] = useState(false)
-    const [playerDragBox, setPlayerDragBox] = useState(false)
-    const [draggables, setDraggables] = useState([])
     const interacted = useRef(false)
+    const [playerInputBox, setPlayerInputBox] = useState(false)
     const playerInput = useRef("")
     const playerInputRef = useRef()
-    const draggablesBoxRef = useRef()
+    const [playerDragBox, setPlayerDragBox] = useState(false)
+    const [playerDragAnswer, setPlayerDragAnswer] = useState("")
+    const [draggables, setDraggables] = useState([])
+    const dragged = useRef()
+    const draggedOver = useRef()
 
     // SET SCRIPTS AND FIRST MESSAGE
     useEffect(() => {
@@ -63,7 +65,7 @@ const Chat = ({ npcData, setNpcData }) => {
                 if (scripts.currentScript?.requiresDrag && !playerDragBox) {
                     setPlayerDragBox(true)
                     setDraggables(scripts.currentScript?.draggables)
-                    
+
                 }
 
                 //EVALUATE WRITTEN ANSWER. CONDITIONS MEANS IS HANDLING PLAYER INPUT
@@ -75,8 +77,6 @@ const Chat = ({ npcData, setNpcData }) => {
                         const nextScript = scripts.currentScripts.checkpointScripts.find(script => script.node === scripts.currentScript.nextNode)
                         setScripts({ ...scripts, currentScript: nextScript })
                     } else {
-
-                        console.log("error")
                         const nextScript = scripts.currentScripts.checkpointScripts.find(script => script.node === "error")
                         setScripts({ ...scripts, currentScript: nextScript })
                     }
@@ -85,7 +85,18 @@ const Chat = ({ npcData, setNpcData }) => {
                 }
 
                 if (playerDragBox) {
-                    console.log("DRAG")
+
+                    const answ = draggables.join("")
+                    if (answ === scripts.currentScript?.correctAnsw) {
+                        console.log("correct")
+                        setPlayerDragAnswer(answ)
+                    } else {
+                        const nextScript = scripts.currentScripts.checkpointScripts.find(script => script.node === "error")
+                        setScripts({ ...scripts, currentScript: nextScript })
+                        setPlayerDragBox(false)
+                    }
+
+
                 }
 
                 //FINISH CONVERSATION AFTER ERROR OR NATURAL ENDING
@@ -114,6 +125,20 @@ const Chat = ({ npcData, setNpcData }) => {
 
     const handleTextInput = (e) => playerInput.current = e.target.value
 
+    const handleDragStart = (draggable) => dragged.current = draggable
+
+    const handleDragEnter = (draggable) => draggedOver.current = draggable
+
+    const handleDragEnd = () => {
+
+        const draggedIndex = draggables.indexOf(dragged.current)
+        const draggedOverIndex = draggables.indexOf(draggedOver.current)
+        const draggablesCopy = [...draggables]
+
+        draggablesCopy[draggedOverIndex] = draggablesCopy.splice(draggedIndex, 1, draggablesCopy[draggedOverIndex])[0]
+        setDraggables(draggablesCopy)
+    }
+
     if (hideBubbles) return <></>
 
     return (
@@ -133,14 +158,19 @@ const Chat = ({ npcData, setNpcData }) => {
                     /> : null
             }
             {
-                playerDragBox ?
-                    <div class="draggablesBox" ref={draggablesBoxRef} onClick={() => console.log(draggablesBoxRef.current)}>
+                playerDragBox && draggables.length !== 0 && playerDragAnswer.length === 0 ?
+                    <div class="draggablesBox">
                         {
                             draggables.map(draggable => {
-                                return(
-                                    <div 
-                                    key={draggable} 
-                                    class="draggable"
+                                return (
+                                    <div
+                                        key={draggable}
+                                        class="draggable"
+                                        draggable="true"
+                                        droppable="true"
+                                        onDragStart={() => handleDragStart(draggable)}
+                                        onDragEnter={() => handleDragEnter(draggable)}
+                                        onDragEnd={handleDragEnd}
                                     >
                                         {draggable}
                                     </div>
@@ -148,6 +178,10 @@ const Chat = ({ npcData, setNpcData }) => {
                             })
                         }
                     </div> : null
+            }
+            {
+                playerDragBox && playerDragAnswer > 0 ?
+                <p class="bubble">{playerDragAnswer}</p> : null
             }
         </Html>
     )

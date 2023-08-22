@@ -84,13 +84,13 @@ export const mapsData = {
                                 node: 0,
                                 text: "今日はいいてんきですね。",
                                 requiresDrag: true,
-                                draggables: ["そう", "はい", "です"],
+                                draggables: ["はい、", "です。", "そう"],
                                 correctAnsw: "はい、そうです。", // IF CORRECT USE NEXT NODE ELSE GO TO INDEX?
                                 nextNode: 1,
                             },
                             {
                                 node: 1,
-                                text: "そうですね・",
+                                text: "そうですね。",
                                 isEnd: true,
                                 nextCheckpoint: 3,
                             },
