@@ -47,7 +47,7 @@ const NpcController = ({
             position={position}
             rotation={rotation}
             // type={type}
-            data={{ npcId: id, npcScripts: scripts }}
+            data={{ npcId: id, npcScripts: scripts, npcRef: npcRef}}
             colliders={false}
         >
             <CapsuleCollider args={[.3, .3]} />

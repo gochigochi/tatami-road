@@ -5,7 +5,6 @@ import { MapsScenes, mapsData } from '../../maps/maps'
 import NpcController from '../Npc/NpcController'
 import CharacterController from '../Character/CharacterController'
 
-
 const GameMap = () => {
 
     const gameMap = useGameMap(state => state.gameMap)
