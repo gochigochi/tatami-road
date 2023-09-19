@@ -4,9 +4,19 @@ export const bubbleMotions = {
     },
     animate: {
         scale: 1,
+        transition: {
+            duration: .3,
+            type: "spring",
+            bounce: .4,
+        }
     },
     exit: {
         scale: 0,
+        transition: {
+            duration: .3,
+            type: "spring",
+            bounce: .4,
+        }
     }
 }
 

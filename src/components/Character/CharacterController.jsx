@@ -1,26 +1,43 @@
-import { useRef, useState, useEffect } from 'react'
-import * as THREE from 'three'
+import { useRef } from 'react'
 import { useFrame } from "@react-three/fiber"
+import { Html } from "@react-three/drei"
 import { RigidBody, CapsuleCollider, CuboidCollider } from "@react-three/rapier"
-import { useInput } from '../../hooks/useInput'
 import { useGameState } from '../../store/gameState'
+import { useChatState } from '../../store/chatState'
+import { useInput } from '../../hooks/useInput'
 import { handleCharacterMovement } from './handleCharacterMovement'
 import { handleCamera } from './handleCamera'
 import Character from "./Character"
-import Chat from "../Chat/Chat"
-import { AnimatePresence } from 'framer-motion'
+import { AnimatePresence } from "framer-motion"
+import { DraggablesBox, Draggable, InputField, InputFieldContainer } from '../Chat/Elements'
+import { bubbleMotions, draggablesMotions, draggableMotion } from '../Chat/Motions'
+import "./styles.css"
 
 const CharacterController = () => {
 
-    const { gameState, updateGameState } = useGameState(state => ({ gameState: state.gameState, updateGameState: state.updateGameState }))
-    const { input, interactionInput } = useInput()
+    // TODO ADD SELECT WORDS FOR EXCERCISE ///////////////////////////////
+    // TODO ADD COMPLETE THE SENTENCE  ///////////////////////////////
+
+    const { gameState } = useGameState(state => ({ gameState: state.gameState }))
+    const { input } = useInput()
+    const {
+        playerInputBox,
+        updatePlayerInputValue,
+        playerDragBox,
+        playerDraggables,
+        updatePlayerDraggables,
+    } = useChatState(state => ({
+        playerInputBox: state.playerInputBox,
+        updatePlayerInputValue: state.updatePlayerInputValue,
+        playerDragBox: state.playerDragBox,
+        playerDraggables: state.playerDraggables,
+        updatePlayerDraggables: state.updatePlayerDraggables,
+    }))
     const rigidBody = useRef()
     const character = useRef()
     const rotation = useRef(0)
-    const intersectingNpc = useRef(false)
-    const [npcData, setNpcData] = useState()
-    const intersectingObject = useRef(false)
-    const intersectingPort = useRef(false)
+    const dragged = useRef()
+    const draggedOver = useRef()
 
     useFrame((state, delta) => {
 
@@ -30,56 +47,28 @@ const CharacterController = () => {
             handleCharacterMovement(input, rigidBody, rotation, character)
         }
 
-        if (interactionInput.current.interact && intersectingNpc.current.intersecting && gameState !== "NPC_CONVERSATION") {
-            // ZOOM IN AND ZOOM OUT AFTER CONVERSATION OR INTERACTIONS
-
-            console.log("CURRENT CHAR.....", character.current)
-            console.log("CURRENT NPC.......", intersectingNpc.current)
-
-            updateGameState("NPC_CONVERSATION")
-            setNpcData({
-                // position: intersectingNpc.current.npcPosition,
-                position: intersectingNpc.current.npcRef.current.getWorldPosition(new THREE.Vector3),
-                content: intersectingNpc.current.data,
-            })
-        }
-
-        //PREVENT PLAYER HOLDS THE INTERACTION BUTTON IMMEDIATELLY
-        if (interactionInput.current.interact) setTimeout(() => interactionInput.current.interact = false, 100)
-
     })
 
-    const handleIntersectionEnter = (payload) => {
+    const handleTextInput = (e) => {
+        console.log(e.target.value)
+        // TODO SET A BOUNDARY ///////////////////////////////
+        updatePlayerInputValue(e.target.value)
 
-        const { manifold, target, other } = payload
-
-        //CHECK IF IS INTERSECTING WITH NPC, OBJECT OR PORT TO ANOTHER LEVEL, ETC
-        // console.log("OTHER......", other)
-
-        //IF NPC THEN...
-        intersectingNpc.current = {
-            intersecting: true,
-            data: other.rigidBodyObject.data,
-            npcPosition: other.rigidBodyObject.position,
-            npcRef: other.rigidBodyObject.data.npcRef,
-            // threeDobject: other.rigidBodyObject,
-            //CHECK QUATERNION OR ROTATION TO ANIMATE ROTATION TWRDS PLAYER
-        }
-        //IF OBJECT THEN...
-        //IF PORTAL THEN...
-
-        console.log(intersectingNpc.current)
     }
 
-    const handleIntersectionExit = (payload) => {
-        //CHECK OBJECT STRUCTURE IF NEED TO RESET ALL
-        intersectingNpc.current = { intersecting: false }
-    }
+    const handleDragStart = (draggable) => dragged.current = draggable
 
-    useEffect(() => {
-        const characterWorldPosition = character.current.getWorldPosition(new THREE.Vector3)
-        console.log("CHARACTER POSITION.,...", characterWorldPosition)
-    }, [character.current])
+    const handleDragEnter = (draggable) => draggedOver.current = draggable
+
+    const handleDragEnd = () => {
+
+        const draggedIndex = playerDraggables.indexOf(dragged.current)
+        const draggedOverIndex = playerDraggables.indexOf(draggedOver.current)
+        const draggablesCopy = [...playerDraggables]
+
+        draggablesCopy[draggedOverIndex] = draggablesCopy.splice(draggedIndex, 1, draggablesCopy[draggedOverIndex])[0]
+        updatePlayerDraggables(draggablesCopy)
+    }
 
     return (
         <RigidBody
@@ -93,16 +82,58 @@ const CharacterController = () => {
                 args={[.5, .5, .5]}
                 position={[0, 0, 0]}  //THIS IS THE DEFAULT
                 sensor
-                onIntersectionEnter={handleIntersectionEnter}
-                onIntersectionExit={handleIntersectionExit}
             />
             <group ref={character} position={[0, -.6, 0]}>
                 <Character input={input} gameState={gameState} />
             </group>
-            <AnimatePresence mode="wait">
+            <AnimatePresence>
                 {
-                    gameState === "NPC_CONVERSATION" && npcData ?
-                        <Chat npcData={npcData} setNpcData={setNpcData} intersectingNpc={intersectingNpc} /> : null
+                    playerInputBox ?
+                        <Html as="div" wrapperClass="bubbles-container" position={[0, 1, 0]}>
+                            <InputFieldContainer
+                                variants={bubbleMotions}
+                                initial="initial"
+                                animate="animate"
+                                exit="exit"
+                            >
+                                <InputField
+                                    name="player-input"
+                                    onChange={handleTextInput}
+                                    type="text"
+                                    autoFocus
+                                />
+                            </InputFieldContainer>
+                        </Html> : null
+                }
+                {
+                    playerDragBox && playerDraggables.length !== 0 ?
+                        <Html as="div" wrapperClass="bubbles-container" position={[0, 1, 0]}>
+                            <DraggablesBox
+                                variants={draggablesMotions}
+                                initial="initial"
+                                animate="animate"
+                                exit="exit"
+                            >
+                                {
+                                    playerDraggables.map(draggable => {
+                                        return (
+                                            <Draggable
+                                                variants={draggableMotion}
+                                                key={draggable}
+                                                class="draggable"
+                                                draggable="true"
+                                                droppable="true"
+                                                onDragStart={() => handleDragStart(draggable)}
+                                                onDragEnter={() => handleDragEnter(draggable)}
+                                                onDragEnd={handleDragEnd}
+                                            >
+                                                {draggable}
+                                            </Draggable>
+                                        )
+                                    })
+                                }
+                            </DraggablesBox>
+                        </Html> : null
                 }
             </AnimatePresence>
         </RigidBody>

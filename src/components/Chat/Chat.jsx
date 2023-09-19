@@ -1,43 +1,55 @@
 import React, { useEffect, useState, useRef } from "react"
 import { Html } from "@react-three/drei"
+import { useFrame } from "@react-three/fiber"
 import { AnimatePresence } from "framer-motion"
-import { useInput } from "../../hooks/useInput"
 import { useGameProgress } from "../../store/gameProgress"
 import { useGameState } from "../../store/gameState"
-import { useInterfaceState } from "../../store/interfaceState"
+import { useChatState } from "../../store/chatState"
+import { useInput } from "../../hooks/useInput"
+import { bubbleMotions } from "./Motions"
+import { Bubble } from "./Elements"
 import "./styles.css"
-import { useFrame } from "@react-three/fiber"
-import { bubbleMotions, draggablesMotions, draggableMotion } from "./Motions"
-import { Bubble, DraggabalesBox, Draggable } from "./Elements"
-import * as THREE from "three"
 
-const Chat = ({ npcData, setNpcData }) => {
+const Chat = ({ npcScripts }) => {
 
     const { gameState, updateGameState } = useGameState(state => ({ gameState: state.gameState, updateGameState: state.updateGameState }))
-    const { gameCheckpoint, updateGameCheckpoint } = useGameProgress(state => ({ gameCheckpoint: state.gameCheckpoint, updateGameCheckpoint: state.updateGameCheckpoint }))
-    const updateInteractionButton = useInterfaceState(state => state.updateInteractionButton)
-    const updateLifeMeter = useInterfaceState(state => state.updateLifeMeter)
+    const { gameCheckpoint, updateGameCheckpoint } = useGameProgress(state => ({
+        gameCheckpoint: state.gameCheckpoint,
+        updateGameCheckpoint: state.updateGameCheckpoint
+    }))
+    const {
+        playerInputBox,
+        updatePlayerInputBox,
+        playerInputValue,
+        playerDragBox,
+        updatePlayerDragBox,
+        playerDraggables,
+        updatePlayerDraggables,
+    } = useChatState(state => ({
+        playerInputBox: state.playerInputBox,
+        playerInputValue: state.playerInputValue,
+        updatePlayerInputBox: state.updatePlayerInputBox,
+        playerDragBox: state.playerDragBox,
+        playerDraggables: state.playerDraggables,
+        updatePlayerDragBox: state.updatePlayerDragBox,
+        updatePlayerDraggables: state.updatePlayerDraggables,
+    }))
     const [scripts, setScripts] = useState()
     const [hideBubbles, setHideBubbles] = useState(false)
     const { interactionInput } = useInput()
     const interacted = useRef(false)
-    const [playerInputBox, setPlayerInputBox] = useState(false)
-    const playerInput = useRef("")
-    const playerInputRef = useRef()
-    const [playerDragBox, setPlayerDragBox] = useState(false)
-    const [draggables, setDraggables] = useState([])
-    const dragged = useRef()
-    const draggedOver = useRef()
-    // const [npcMsgPosition, setNpcMsgPosition] = useState(new THREE.Vector3(npcData.position.x, npcData.position.y, npcData.position.z))
 
-    console.log(npcData)
-    // console.log(npcMsgPosition)
+    const setNextScript = (nextNode) => {
+        const nextScript = scripts.currentScripts.checkpointScripts.find(script => script.node === nextNode)
+        setScripts()// REMOVE SCRIPTS AND SET THEM AGAIN AS TO CLOSE OPEN SPEECH BUBBLE
+        setTimeout(() => setScripts({ ...scripts, currentScript: nextScript }), 200)
+    }
 
     // SET SCRIPTS AND FIRST MESSAGE
     useEffect(() => {
 
         //GET SCRIPTS ACCORDING TO CHECKPOINT
-        const currentScripts = npcData.content.npcScripts.findLast(scripts => scripts.checkpoint <= gameCheckpoint)
+        const currentScripts = npcScripts.findLast(scripts => scripts.checkpoint <= gameCheckpoint)
         const currentScript = currentScripts.checkpointScripts.find(scripts => scripts.node === 0)
         setScripts({
             currentScripts: currentScripts,
@@ -48,13 +60,11 @@ const Chat = ({ npcData, setNpcData }) => {
 
     useFrame(() => {
 
-        // WHEN CHAT INTERACTION
         if (interactionInput.current.interact && gameState === "NPC_CONVERSATION") {
 
             if (!interacted.current) {
 
                 interacted.current = true
-
 
                 if (
                     scripts.currentScript?.nextNode &&
@@ -62,71 +72,56 @@ const Chat = ({ npcData, setNpcData }) => {
                     !scripts.currentScript?.requiresDrag &&
                     !scripts.currentScript?.isEnd
                 ) {
-                    //SET NEXT SCRIPT (A)
-                    const nextScript = scripts.currentScripts.checkpointScripts.find(script => script.node === scripts.currentScript.nextNode)
-                    // REMOVE SCRIPTS AND SET THEM AGAIN AS TO CLOSE OPEN SPEECH BUBBLE
-                    setScripts()
-                    setTimeout(() => setScripts({ ...scripts, currentScript: nextScript }), 500)
-                    // setScripts({ ...scripts, currentScript: nextScript })
+                    setNextScript(scripts.currentScript.nextNode)
                 }
 
-
                 if (scripts.currentScript?.requiresInput && !playerInputBox) {
-                    setPlayerInputBox(true)
+                    updatePlayerInputBox(true)
                 }
 
                 if (scripts.currentScript?.requiresDrag && !playerDragBox) {
-                    setPlayerDragBox(true)
-                    setDraggables(scripts.currentScript?.draggables)
+                    updatePlayerDragBox(true)
+                    updatePlayerDraggables(scripts.currentScript?.draggables)
                 }
 
-                //EVALUATE WRITTEN ANSWER. IS HANDLING PLAYER INPUT
+                // EVALUATE WRITTEN ANSWER IN INPUT VALUE
                 if (playerInputBox) {
-                    // console.log(playerInput.current)
 
-                    if (playerInput.current === scripts.currentScript.correctAnsw) {
-                        //SET NEXT SCRIPT (A)
-                        const nextScript = scripts.currentScripts.checkpointScripts.find(script => script.node === scripts.currentScript.nextNode)
-                        // REMOVE SCRIPTS AND SET THEM AGAIN AS TO CLOSE OPEN SPEECH BUBBLE
-                        setScripts()
-                        setTimeout(() => setScripts({ ...scripts, currentScript: nextScript }), 500)
-                        // setScripts({ ...scripts, currentScript: nextScript })
+                    if (playerInputValue === scripts.currentScript.correctAnsw) {
+                        setNextScript(scripts.currentScript.nextNode)
                     } else {
-                        const nextScript = scripts.currentScripts.checkpointScripts.find(script => script.node === "error")
-                        setScripts({ ...scripts, currentScript: nextScript })
+                        setNextScript("error")
                     }
 
-                    setPlayerInputBox(false)
+                    updatePlayerInputBox(false)
                 }
 
+                // EVALUATE DRAGGABLES ANSWER IN DRAGGABLES
                 if (playerDragBox) {
 
-                    const answ = draggables.join("")
+                    const answ = playerDraggables.join("")
 
                     if (answ === scripts.currentScript?.correctAnsw) {
-                        const nextScript = scripts.currentScripts.checkpointScripts.find(script => script.node === scripts.currentScript.nextNode)
-                        setScripts({ ...scripts, currentScript: nextScript })
-                        updateLifeMeter(5, "inc")
+                        setNextScript(scripts.currentScript.nextNode)
+                        // updateLifeMeter(5, "inc")
                     } else {
-                        const nextScript = scripts.currentScripts.checkpointScripts.find(script => script.node === "error")
-                        setScripts({ ...scripts, currentScript: nextScript })
-                        updateLifeMeter(5, "dec")
+                        setNextScript("error")
+                        // updateLifeMeter(5, "dec")
                     }
 
-                    setPlayerDragBox(false)
+                    updatePlayerDragBox(false)
+                    updatePlayerDraggables([])
                 }
-
 
                 //FINISH CONVERSATION AFTER ERROR OR NATURAL ENDING
                 if (scripts.currentScript.node === "error" || scripts.currentScript?.isEnd) {
                     setHideBubbles(true)
                     setTimeout(() => {
                         updateGameState("PLAY")
-                        setNpcData()
+                        // setNpcData()
                         interactionInput.current.interact = false
                     }, 300)
 
-                    console.log('this')
                     if (scripts.currentScript?.nextCheckpoint) {
                         // UPDATE LOCAL CHEKPOINT ON STORE IF HAS ANY
                         updateGameCheckpoint(scripts.currentScript.nextCheckpoint)
@@ -137,28 +132,7 @@ const Chat = ({ npcData, setNpcData }) => {
 
         // WHEN INTERACTION RELEASED
         if (!interactionInput.current.interact) interacted.current = false
-
     })
-
-    const handleTextInput = (e) => playerInput.current = e.target.value
-
-    const handleDragStart = (draggable) => dragged.current = draggable
-
-    const handleDragEnter = (draggable) => draggedOver.current = draggable
-
-    const handleDragEnd = () => {
-
-        const draggedIndex = draggables.indexOf(dragged.current)
-        const draggedOverIndex = draggables.indexOf(draggedOver.current)
-        const draggablesCopy = [...draggables]
-
-        draggablesCopy[draggedOverIndex] = draggablesCopy.splice(draggedIndex, 1, draggablesCopy[draggedOverIndex])[0]
-        setDraggables(draggablesCopy)
-    }
-
-    // if (hideBubbles) return <></>
-
-    // console.log(scripts)
 
     return (
         <>
@@ -171,58 +145,15 @@ const Chat = ({ npcData, setNpcData }) => {
                                 initial="initial"
                                 animate="animate"
                                 exit="exit"
-                                class="bubble"
                                 dangerouslySetInnerHTML={{ __html: scripts.currentScript.text }}
                             /> :
                             null
                     }
                 </AnimatePresence>
             </Html>
-            <Html as="div" wrapperClass="bubbles-container" position={[0, 0, 0]}>
-                {
-                    playerInputBox ?
-                        <input
-                            class="player-input"
-                            onChange={handleTextInput}
-                            ref={playerInputRef}
-                            type="text"
-                            autoFocus
-                        /> : null
-                }
-                <AnimatePresence>
-                    {
-                        playerDragBox && draggables.length !== 0 ?
-                            <DraggabalesBox
-                                variants={draggablesMotions}
-                                initial="initial"
-                                animate="animate"
-                                exit="exit"
-                            >
-                                {
-                                    draggables.map(draggable => {
-                                        return (
-                                            <Draggable
-                                                variants={draggableMotion}
-                                                key={draggable}
-                                                class="draggable"
-                                                draggable="true"
-                                                droppable="true"
-                                                onDragStart={() => handleDragStart(draggable)}
-                                                onDragEnter={() => handleDragEnter(draggable)}
-                                                onDragEnd={handleDragEnd}
-                                            >
-                                                {draggable}
-                                            </Draggable>
-                                        )
-                                    })
-                                }
-                            </DraggabalesBox> : null
-                    }
-                </AnimatePresence>
-            </Html>
+            {/* ADD KIND OF A TOAST EMOJI FOR ERRORS OR ASSERTIONS */}
         </>
     )
 }
 
-// export default Chat
 export default React.memo(Chat)
