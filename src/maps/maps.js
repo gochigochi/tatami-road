@@ -1,10 +1,16 @@
 import Playground from "../components/Maps/Playground"
+import TestMapGLB from "../components/Maps/TestMapGLB"
 
 export const MapsScenes = {
+    TestMapGLB,
     Playground,
 }
 
 export const mapsData = {
+    testMap: {
+        mapComponent: "TestMapGLB",
+        npcs: []
+    },
     playground: {
         mapComponent: "Playground",
         npcs: [

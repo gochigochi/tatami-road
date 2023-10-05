@@ -74,69 +74,90 @@ const CharacterController = () => {
         <RigidBody
             ref={rigidBody}
             enabledRotations={[false, false, false]}
-            position={[-2, 2, 2]}
             colliders={false}
+            // type="fixed"
         >
-            <CapsuleCollider args={[.3, .3]} position={[0, 0, 0]} />
+            <CapsuleCollider args={[.5, .5]} position={[0, 1, 0]} />
+            {/* <CapsuleCollider args={[.3, .3]} position={[0, 0, 0]} />
             <CuboidCollider
                 args={[.5, .5, .5]}
                 position={[0, 0, 0]}  //THIS IS THE DEFAULT
                 sensor
-            />
-            <group ref={character} position={[0, -.6, 0]}>
+            /> */}
+            <group ref={character} >
                 <Character input={input} gameState={gameState} />
             </group>
-            <AnimatePresence>
-                {
-                    playerInputBox ?
-                        <Html as="div" wrapperClass="bubbles-container" position={[0, 1, 0]}>
-                            <InputFieldContainer
-                                variants={bubbleMotions}
-                                initial="initial"
-                                animate="animate"
-                                exit="exit"
-                            >
-                                <InputField
-                                    name="player-input"
-                                    onChange={handleTextInput}
-                                    type="text"
-                                    autoFocus
-                                />
-                            </InputFieldContainer>
-                        </Html> : null
-                }
-                {
-                    playerDragBox && playerDraggables.length !== 0 ?
-                        <Html as="div" wrapperClass="bubbles-container" position={[0, 1, 0]}>
-                            <DraggablesBox
-                                variants={draggablesMotions}
-                                initial="initial"
-                                animate="animate"
-                                exit="exit"
-                            >
-                                {
-                                    playerDraggables.map(draggable => {
-                                        return (
-                                            <Draggable
-                                                variants={draggableMotion}
-                                                key={draggable}
-                                                class="draggable"
-                                                draggable="true"
-                                                droppable="true"
-                                                onDragStart={() => handleDragStart(draggable)}
-                                                onDragEnter={() => handleDragEnter(draggable)}
-                                                onDragEnd={handleDragEnd}
-                                            >
-                                                {draggable}
-                                            </Draggable>
-                                        )
-                                    })
-                                }
-                            </DraggablesBox>
-                        </Html> : null
-                }
-            </AnimatePresence>
         </RigidBody>
+
+        // <RigidBody
+        //     ref={rigidBody}
+        //     enabledRotations={[false, false, false]}
+        //     position={[0, 2, 0]}
+        //     colliders={false}
+        // >
+        //     <CapsuleCollider args={[.3, .3]} position={[0, 0, 0]} />
+        //     <CuboidCollider
+        //         args={[.5, .5, .5]}
+        //         position={[0, 0, 0]}  //THIS IS THE DEFAULT
+        //         sensor
+        //     />
+        //     {/* <group ref={character} position={[0, -.6, 0]}>
+        //         <Character input={input} gameState={gameState} />
+        //     </group> */}
+        //     <group ref={character}>
+        //         <Character input={input} gameState={gameState} />
+        //     </group>
+        //     <AnimatePresence>
+        //         {
+        //             playerInputBox ?
+        //                 <Html as="div" wrapperClass="bubbles-container" position={[0, 1, 0]}>
+        //                     <InputFieldContainer
+        //                         variants={bubbleMotions}
+        //                         initial="initial"
+        //                         animate="animate"
+        //                         exit="exit"
+        //                     >
+        //                         <InputField
+        //                             name="player-input"
+        //                             onChange={handleTextInput}
+        //                             type="text"
+        //                             autoFocus
+        //                         />
+        //                     </InputFieldContainer>
+        //                 </Html> : null
+        //         }
+        //         {
+        //             playerDragBox && playerDraggables.length !== 0 ?
+        //                 <Html as="div" wrapperClass="bubbles-container" position={[0, 1, 0]}>
+        //                     <DraggablesBox
+        //                         variants={draggablesMotions}
+        //                         initial="initial"
+        //                         animate="animate"
+        //                         exit="exit"
+        //                     >
+        //                         {
+        //                             playerDraggables.map(draggable => {
+        //                                 return (
+        //                                     <Draggable
+        //                                         variants={draggableMotion}
+        //                                         key={draggable}
+        //                                         class="draggable"
+        //                                         draggable="true"
+        //                                         droppable="true"
+        //                                         onDragStart={() => handleDragStart(draggable)}
+        //                                         onDragEnter={() => handleDragEnter(draggable)}
+        //                                         onDragEnd={handleDragEnd}
+        //                                     >
+        //                                         {draggable}
+        //                                     </Draggable>
+        //                                 )
+        //                             })
+        //                         }
+        //                     </DraggablesBox>
+        //                 </Html> : null
+        //         }
+        //     </AnimatePresence>
+        // </RigidBody>
     )
 }
 

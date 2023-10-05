@@ -48,7 +48,7 @@ const GameMap = () => {
         return (
             <>
                 <Map />
-                {
+                {/* {
                     currentMapData.npcs.map(npc => {
                         // console.log(npc)
                         return (
@@ -63,7 +63,7 @@ const GameMap = () => {
                             />
                         )
                     })
-                }
+                } */}
                 <CharacterController />
             </>
         )

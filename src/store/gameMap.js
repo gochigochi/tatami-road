@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
 export const useGameMap = create((set) => ({
-    gameMap: "playground",
+    gameMap: "testMap", //"playground",
     updateGameMap: (nextMap) => set({ gameMap: nextMap })
 }))
